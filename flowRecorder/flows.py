@@ -46,11 +46,13 @@ from baseclass import BaseClass
 # For flow hashing:
 import nethash
 
+
 class Flows(BaseClass):
     """
     The Flows class represents cummulative information about flows
     (not individual packets)
     """
+
     def __init__(self, config, mode):
         """
         Initialise the Flows Class
@@ -64,7 +66,7 @@ class Flows(BaseClass):
         self.config = config
         # Set up Logging with inherited base class method:
         self.configure_logging(__name__, "flows_logging_level_s",
-                                       "flows_logging_level_c")
+                               "flows_logging_level_c")
         # Mode is u for unidirectional or b for bidirectional:
         self.mode = mode
         # Python dictionaries to hold current and archived flow records:
@@ -92,9 +94,12 @@ class Flows(BaseClass):
 
         # Process each packet in the pcap:
         for timestamp, packet in dpkt_reader:
+            # self.logger.info(packet)
             # Instantiate an instance of Packet class with packet info:
             packet = Packet(self.logger, timestamp, packet, self.mode)
+            # self.logger.info(packet.tp_flags)
             if packet.ingested:
+
                 # Update the flow with packet info:
                 self.flow.update(packet)
                 self.packets_processed += 1
@@ -133,28 +138,34 @@ class Flows(BaseClass):
             if self.mode == 'u':
                 # Unidirectional fields:
                 fieldnames = ['src_ip', 'src_port', 'dst_ip', 'dst_port',
-                            'proto', 'pktTotalCount', 'octetTotalCount',
-                            'min_ps', 'max_ps', 'avg_ps', 'std_dev_ps',
-                            'flowStart', 'flowEnd', 'flowDuration',
-                            'min_piat', 'max_piat', 'avg_piat', 'std_dev_piat']
+                              'proto', 'pktTotalCount', 'octetTotalCount',
+                              'min_ps', 'max_ps', 'avg_ps', 'std_dev_ps',
+                              'flowStart', 'flowEnd', 'flowDuration',
+                              'min_piat', 'max_piat', 'avg_piat', 'std_dev_piat']
             else:
                 # Bidirectional fields:
                 fieldnames = ['src_ip', 'src_port', 'dst_ip', 'dst_port',
-                            'proto', 'pktTotalCount', 'octetTotalCount',
-                            'min_ps', 'max_ps', 'avg_ps', 'std_dev_ps',
-                            'flowStart', 'flowEnd', 'flowDuration',
-                            'min_piat', 'max_piat', 'avg_piat', 'std_dev_piat',
-                            'f_pktTotalCount', 'f_octetTotalCount',
-                            'f_min_ps', 'f_max_ps', 'f_avg_ps', 'f_std_dev_ps',
-                            'f_flowStart', 'f_flowEnd', 'f_flowDuration',
-                            'f_min_piat', 'f_max_piat', 'f_avg_piat',
-                            'f_std_dev_piat',
-                            'b_pktTotalCount', 'b_octetTotalCount',
-                            'b_min_ps', 'b_max_ps', 'b_avg_ps', 'b_std_dev_ps',
-                            'b_flowStart', 'b_flowEnd', 'b_flowDuration',
-                            'b_min_piat', 'b_max_piat', 'b_avg_piat',
-                            'b_std_dev_piat'
-                            ]
+                              'proto', 'pktTotalCount', 'octetTotalCount',
+                              'totalFin', 'totalSyn', 'totalRst', 'totalPush',
+                              'totalAck', 'totalUrg', 'totalEce', 'totalCwr',
+                              'min_ps', 'max_ps', 'avg_ps', 'std_dev_ps',
+                              'flowStart', 'flowEnd', 'flowDuration',
+                              'min_piat', 'max_piat', 'avg_piat', 'std_dev_piat',
+
+                              'f_pktTotalCount', 'f_octetTotalCount',
+                              'f_totalFin', 'f_totalSyn', 'f_totalRst', 'f_totalPush',
+                              'f_totalAck', 'f_totalUrg', 'f_totalEce', 'f_totalCwr',
+                              'f_min_ps', 'f_max_ps', 'f_avg_ps', 'f_std_dev_ps',
+                              'f_flowStart', 'f_flowEnd', 'f_flowDuration',
+                              'f_min_piat', 'f_max_piat', 'f_avg_piat', 'f_std_dev_piat',
+
+                              'b_pktTotalCount', 'b_octetTotalCount',
+                              'b_totalFin', 'b_totalSyn', 'b_totalRst', 'b_totalPush',
+                              'b_totalAck', 'b_totalUrg', 'b_totalEce', 'b_totalCwr',
+                              'b_min_ps', 'b_max_ps', 'b_avg_ps', 'b_std_dev_ps',
+                              'b_flowStart', 'b_flowEnd', 'b_flowDuration',
+                              'b_min_piat', 'b_max_piat', 'b_avg_piat', 'b_std_dev_piat',
+                              ]
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames, extrasaction='ignore')
             # Write header:
             writer.writeheader()
@@ -176,12 +187,14 @@ class Flows(BaseClass):
         self.logger.info("Ignored Packets: %s", self.packets_ignored)
         self.logger.info("Processed Packets: %s", self.packets_processed)
 
+
 class Flow(object):
     """
     An object that represents summary for an individual flow
     Designed to be instantiated once by the Flows class
     and set to different flow context by packet object
     """
+
     def __init__(self, config, logger, flow_cache, flow_archive, mode):
         """
         Initialise with references to logger and flow_cache dictionary
@@ -250,7 +263,7 @@ class Flow(object):
         # We decrement the packet counter every single time, otherwise it would start from 2
         # The first piat will be the current timestamp minus the timestamp of the previous packet:
         flow_dict['iats'].append(flow_dict['times'][-1] \
-            - flow_dict['times'][-2])
+                                 - flow_dict['times'][-2])
         # Update the flow end/duration (the start does not change)
         flow_dict['flowEnd'] = packet.timestamp
         flow_dict['flowDuration'] = (packet.timestamp - flow_dict['flowStart'])
@@ -259,6 +272,8 @@ class Flow(object):
         flow_dict['max_piat'] = max(flow_dict['iats'])
         flow_dict['avg_piat'] = sum(flow_dict['iats']) / (flow_dict['pktTotalCount'] - 1)
         flow_dict['std_dev_piat'] = np.std(flow_dict['iats'])
+        # print("tcp flag: " + str(packet.tp_flags))
+        calculate_tcp_counts(flow_dict, packet.tp_flags)
 
     def _update_found_bidir(self, packet):
         """
@@ -287,7 +302,7 @@ class Flow(object):
             # Do inter-packet arrival time if have at least 2 packets:
             if (flow_dict['f_pktTotalCount'] > 1):
                 flow_dict['f_iats'].append(flow_dict['f_times'][-1] \
-                        - flow_dict['f_times'][-2])
+                                           - flow_dict['f_times'][-2])
             # Update the flow end/duration (the start does not change)
             flow_dict['f_flowEnd'] = packet.timestamp
             flow_dict['f_flowDuration'] = (packet.timestamp - flow_dict['f_flowStart'])
@@ -296,6 +311,7 @@ class Flow(object):
             flow_dict['f_max_piat'] = max(flow_dict['f_iats'])
             flow_dict['f_avg_piat'] = sum(flow_dict['f_iats']) / (flow_dict['f_pktTotalCount'] - 1)
             flow_dict['f_std_dev_piat'] = np.std(flow_dict['f_iats'])
+            calculate_tcp_counts(flow_dict, packet.tp_flags, "f")
         else:
             # Backward (b) direction
             # Note: this may be the first time we've see backwards dir packet.
@@ -318,13 +334,15 @@ class Flow(object):
             else:
                 # Not first time:
                 flow_dict['b_iats'].append(flow_dict['b_times'][-1] \
-                    - flow_dict['b_times'][-2])
+                                           - flow_dict['b_times'][-2])
                 flow_dict['b_flowDuration'] = (packet.timestamp - flow_dict['b_flowStart'])
                 # Update the min/max/avg/std_dev of packet-inter-arrival-times:
                 flow_dict['b_min_piat'] = min(flow_dict['b_iats'])
                 flow_dict['b_max_piat'] = max(flow_dict['b_iats'])
                 flow_dict['b_avg_piat'] = sum(flow_dict['b_iats']) / (flow_dict['b_pktTotalCount'] - 1)
                 flow_dict['b_std_dev_piat'] = np.std(flow_dict['b_iats'])
+                # Update number of tcp flags
+                calculate_tcp_counts(flow_dict, packet.tp_flags, "b")
             # Update the flow end/duration (the start does not change):
             flow_dict['b_flowEnd'] = packet.timestamp
 
@@ -348,7 +366,7 @@ class Flow(object):
         flow_dict['length'] = []
         flow_dict['length'].append(packet.length)
         # Store the packet size and number of octets:
-        flow_dict['pktTotalCount'] = 1
+        flow_dict['pktTotalCount'] = 1  # TWAT
         flow_dict['octetTotalCount'] = packet.length
         # Set the min/max/avg/std_dev of packet sizes
         # (in case there will be no more packets belonging to the flow):
@@ -370,6 +388,16 @@ class Flow(object):
         flow_dict['max_piat'] = 0
         flow_dict['avg_piat'] = 0
         flow_dict['std_dev_piat'] = 0
+        # set all tcp counts to 0
+        flow_dict['totalFin'] = 0
+        flow_dict['totalSyn'] = 0
+        flow_dict['totalRst'] = 0
+        flow_dict['totalPush'] = 0
+        flow_dict['totalAck'] = 0
+        flow_dict['totalUrg'] = 0
+        flow_dict['totalEce'] = 0
+        flow_dict['totalCwr'] = 0
+        calculate_tcp_counts(flow_dict, packet.tp_flags)
 
     def _create_new_bidir(self, packet):
         """
@@ -397,6 +425,16 @@ class Flow(object):
         flow_dict['b_max_piat'] = 0
         flow_dict['b_avg_piat'] = 0
         flow_dict['b_std_dev_piat'] = 0
+        flow_dict['b_totalFin'] = 0
+        flow_dict['b_totalSyn'] = 0
+        flow_dict['b_totalRst'] = 0
+        flow_dict['b_totalPush'] = 0
+        flow_dict['b_totalAck'] = 0
+        flow_dict['b_totalUrg'] = 0
+        flow_dict['b_totalEce'] = 0
+        flow_dict['b_totalCwr'] = 0
+        calculate_tcp_counts(flow_dict, packet.tp_flags, "b")
+
         # Determine packet direction (f=forward, r=reverse):
         direction = self.packet_dir(packet, flow_dict)
         # Update keys dependant on the direction (f or b):
@@ -425,6 +463,16 @@ class Flow(object):
             flow_dict['f_max_piat'] = 0
             flow_dict['f_avg_piat'] = 0
             flow_dict['f_std_dev_piat'] = 0
+            flow_dict['f_totalFin'] = 0
+            flow_dict['f_totalSyn'] = 0
+            flow_dict['f_totalRst'] = 0
+            flow_dict['f_totalPush'] = 0
+            flow_dict['f_totalAck'] = 0
+            flow_dict['f_totalUrg'] = 0
+            flow_dict['f_totalEce'] = 0
+            flow_dict['f_totalCwr'] = 0
+            calculate_tcp_counts(flow_dict, packet.tp_flags, "f")
+
         else:
             # Backward (b) direction
             # Store the size of the first packet:
@@ -450,6 +498,15 @@ class Flow(object):
             flow_dict['b_max_piat'] = 0
             flow_dict['b_avg_piat'] = 0
             flow_dict['b_std_dev_piat'] = 0
+            flow_dict['b_totalFin'] = 0
+            flow_dict['b_totalSyn'] = 0
+            flow_dict['b_totalRst'] = 0
+            flow_dict['b_totalPush'] = 0
+            flow_dict['b_totalAck'] = 0
+            flow_dict['b_totalUrg'] = 0
+            flow_dict['b_totalEce'] = 0
+            flow_dict['b_totalCwr'] = 0
+            calculate_tcp_counts(flow_dict, packet.tp_flags, "b")
 
     def _is_current_flow(self, packet, flow_dict):
         """
@@ -497,33 +554,32 @@ class Flow(object):
             if proto == 6 or proto == 17:
                 # Generate a directional 6-tuple flow_hash:
                 new_hash = nethash.hash_b6((ip_src,
-                                        ip_dst, proto, tp_src,
-                                        tp_dst, start_timestamp))
+                                            ip_dst, proto, tp_src,
+                                            tp_dst, start_timestamp))
             else:
                 # Generate a directional 4-tuple flow_hash:
                 new_hash = nethash.hash_b4((ip_src,
-                                        ip_dst, proto,
-                                        start_timestamp))
+                                            ip_dst, proto,
+                                            start_timestamp))
         elif self.mode == 'u':
             if proto == 6 or proto == 17:
                 # Generate a directional 6-tuple flow_hash:
                 new_hash = nethash.hash_u6((ip_src,
-                                        ip_dst, proto, tp_src,
-                                        tp_dst, start_timestamp))
+                                            ip_dst, proto, tp_src,
+                                            tp_dst, start_timestamp))
             else:
                 # Generate a directional 4-tuple flow_hash:
                 new_hash = nethash.hash_u4((ip_src,
-                                        ip_dst, proto,
-                                        start_timestamp))
+                                            ip_dst, proto,
+                                            start_timestamp))
         # Check key isn't already used in archive:
         if new_hash in self.flow_archive:
             self.logger.warning("archive duplicate flow key=%s", new_hash)
             return
         # Copy to flow archive:
         self.flow_archive[new_hash] = flow_dict
-        
+
         # Delete from current flows:
-        
 
     def packet_dir(self, packet, flow_dict):
         """
@@ -541,6 +597,7 @@ class Packet(object):
     """
     An object that represents a packet
     """
+
     def __init__(self, logger, timestamp, packet, mode):
         """
         Parameters:
@@ -550,7 +607,7 @@ class Packet(object):
             hash calculation
         """
         self.logger = logger
-        #*** Initialise packet variables:
+        # *** Initialise packet variables:
         self.flow_hash = 0
         self.timestamp = timestamp
         # self.length = len(packet)
@@ -618,73 +675,125 @@ class Packet(object):
             if self.proto == 6 or self.proto == 17:
                 # Generate a directional 5-tuple flow_hash:
                 self.flow_hash = nethash.hash_b5((self.ip_src,
-                                        self.ip_dst, self.proto, self.tp_src,
-                                        self.tp_dst))
+                                                  self.ip_dst, self.proto, self.tp_src,
+                                                  self.tp_dst))
             else:
                 # Generate a directional 3-tuple flow_hash:
                 self.flow_hash = nethash.hash_b3((self.ip_src,
-                                        self.ip_dst, self.proto))
+                                                  self.ip_dst, self.proto))
         elif mode == 'u':
             if self.proto == 6 or self.proto == 17:
                 # Generate a directional 5-tuple flow_hash:
                 self.flow_hash = nethash.hash_u5((self.ip_src,
-                                        self.ip_dst, self.proto, self.tp_src,
-                                        self.tp_dst))
+                                                  self.ip_dst, self.proto, self.tp_src,
+                                                  self.tp_dst))
             else:
                 # Generate a directional 3-tuple flow_hash:
                 self.flow_hash = nethash.hash_u3((self.ip_src,
-                                        self.ip_dst, self.proto))
+                                                  self.ip_dst, self.proto))
         else:
             logger.critical("unsupported mode=%s", mode)
             sys.exit()
         # Yay, packet has been ingested:
         self.ingested = True
 
-    def tcp_fin(self):
-        """
-        Does the current packet have the TCP FIN flag set?
-        """
-        return self.tp_flags & dpkt.tcp.TH_FIN != 0
 
-    def tcp_syn(self):
-        """
-        Does the current packet have the TCP SYN flag set?
-        """
-        return self.tp_flags & dpkt.tcp.TH_SYN != 0
+def tcp_flag_and_direction(flag, flag_direction=None):
+    return_var = ""
+    if flag == dpkt.tcp.TH_FIN:
+        return_var = "FIN"
+    elif flag == dpkt.tcp.TH_SYN:
+        return_var = "SYN"
+    elif flag == dpkt.tcp.TH_RST:
+        return_var = "RST"
+    elif flag == dpkt.tcp.TH_PUSH:
+        return_var = "PUSH"
+    elif flag == dpkt.tcp.TH_ACK:
+        return_var = "ACK"
+    elif flag == dpkt.tcp.TH_URG:
+        return_var = "URG"
+    elif flag == dpkt.tcp.TH_ECE:
+        return_var = "ECE"
+    elif flag == dpkt.tcp.TH_CWR:
+        return_var = "CWR"
+    if flag_direction == "forward":
+        return "f_" + return_var
+    elif flag_direction == "backward":
+        return "b_" + return_var
+    else:
+        return return_var
 
-    def tcp_rst(self):
-        """
-        Does the current packet have the TCP RST flag set?
-        """
-        return self.tp_flags & dpkt.tcp.TH_RST != 0
+# checks what flags have been set for this specific tcp packet, and increments the corresponding count by 1
+def calculate_tcp_counts(flow_dict, tcp_flags, direction=""):
+    #if no direction is given it's a total count, else f and b means it's a direction specific count
+    if direction == "b":
+        direction = "b_"
+    elif direction == "f":
+        direction = "f_"
+    # Check if it is a TCP packet by checking flags !""
+    if tcp_flags != "":
+        if is_tcp_fin(tcp_flags):
+            flow_dict[direction + 'totalFin'] += 1
+        elif is_tcp_syn(tcp_flags):
+            flow_dict[direction + 'totalSyn'] += 1
+        elif is_tcp_rst(tcp_flags):
+            flow_dict[direction + 'totalRst'] += 1
+        elif is_tcp_psh(tcp_flags):
+            flow_dict[direction + 'totalPush'] += 1
+        elif is_tcp_ack(tcp_flags):
+            flow_dict[direction + 'totalAck'] += 1
+        elif is_tcp_urg(tcp_flags):
+            flow_dict[direction + 'totalUrg'] += 1
+        elif is_tcp_ece(tcp_flags):
+            flow_dict[direction + 'totalEce'] += 1
+        elif is_tcp_cwr(tcp_flags):
+            flow_dict[direction + 'totalCwr'] += 1
 
-    def tcp_psh(self):
-        """
-        Does the current packet have the TCP PSH flag set?
-        """
-        return self.tp_flags & dpkt.tcp.TH_PUSH != 0
+def is_tcp_fin(tcp_flags):
+    """
+    Does the current packet have the TCP FIN flag set?
+    """
+    return tcp_flags & dpkt.tcp.TH_FIN != 0
 
-    def tcp_ack(self):
-        """
-        Does the current packet have the TCP ACK flag set?
-        """
-        return self.tp_flags & dpkt.tcp.TH_ACK != 0
+def is_tcp_syn(tcp_flags):
+    """
+    Does the current packet have the TCP SYN flag set?
+    """
+    return tcp_flags & dpkt.tcp.TH_SYN != 0
 
-    def tcp_urg(self):
-        """
-        Does the current packet have the TCP URG flag set?
-        """
-        return self.tp_flags & dpkt.tcp.TH_URG != 0
+def is_tcp_rst(tcp_flags):
+    """
+    Does the current packet have the TCP RST flag set?
+    """
+    return tcp_flags & dpkt.tcp.TH_RST != 0
 
-    def tcp_ece(self):
-        """
-        Does the current packet have the TCP ECE flag set?
-        """
-        return self.tp_flags & dpkt.tcp.TH_ECE != 0
+def is_tcp_psh(tcp_flags):
+    """
+    Does the current packet have the TCP PSH flag set?
+    """
+    return tcp_flags & dpkt.tcp.TH_PUSH != 0
 
-    def tcp_cwr(self):
-        """
-        Does the current packet have the TCP CWR flag set?
-        """
-        return self.tp_flags & dpkt.tcp.TH_CWR != 0
+def is_tcp_ack(tcp_flags):
+    """
+    Does the current packet have the TCP ACK flag set?
+    """
+    return tcp_flags & dpkt.tcp.TH_ACK != 0
+
+def is_tcp_urg(tcp_flags):
+    """
+    Does the current packet have the TCP URG flag set?
+    """
+    return tcp_flags & dpkt.tcp.TH_URG != 0
+
+def is_tcp_ece(tcp_flags):
+    """
+    Does the current packet have the TCP ECE flag set?
+    """
+    return tcp_flags & dpkt.tcp.TH_ECE != 0
+
+def is_tcp_cwr(tcp_flags):
+    """
+    Does the current packet have the TCP CWR flag set?
+    """
+    return tcp_flags & dpkt.tcp.TH_CWR != 0
 
