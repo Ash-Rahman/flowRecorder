@@ -98,8 +98,7 @@ class Flows(BaseClass):
             # Instantiate an instance of Packet class with packet info:
             packet = Packet(self.logger, timestamp, packet, self.mode)
             # self.logger.info(packet.tp_flags)
-            if packet.ingested:
-
+            if packet.ingested and packet.proto == 6:
                 # Update the flow with packet info:
                 self.flow.update(packet)
                 self.packets_processed += 1

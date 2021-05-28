@@ -32,7 +32,7 @@ import logging
 import coloredlogs
 
 # For live packet capture:
-import pcapy
+#import pcapy
 
 # Import dpkt for packet parsing:
 import dpkt
@@ -184,7 +184,7 @@ class FlowRecorder(BaseClass):
         promiscuous = self.config.get_value("promiscuous")
         read_timeout = self.config.get_value("read_timeout")
         # Instantiate sniffer:
-        sniffer = pcapy.open_live(self.interface, maxlen, promiscuous, read_timeout)
+        #sniffer = pcapy.open_live(self.interface, maxlen, promiscuous, read_timeout)
         # Start sniffing:
         sniffing = True
         while sniffing:
